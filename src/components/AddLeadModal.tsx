@@ -245,7 +245,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({
               variant="outlined"
               size="small"
             >
-              {["Website", "Referral", "Social Media", "Cold Call"].map(
+              {["Website", "Referral", "Social Media", "Cold Call","Other"].map(
                 (source, index) => (
                   <MenuItem key={index} value={source}>
                     {source}

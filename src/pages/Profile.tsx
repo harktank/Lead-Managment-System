@@ -221,7 +221,7 @@ const Profile = () => {
                   onClick={handleUpdate}
                   sx={{ fontSize: "14px", fontWeight: "bold" }}
                 >
-                  Save Changes
+                  Save Change
                 </Button>
                  <Button
                   variant="outlined"
