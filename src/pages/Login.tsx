@@ -1,13 +1,16 @@
 import React, { useState } from "react";
 import { TextField, Button, Typography, Box, Paper, Grid } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate(); // Initialize the navigate function
 
   const handleLogin = () => {
-    console.log("Logging in with:", { email, password });
+    // No actual login logic needed for this request
+    // console.log("Attempting to navigate to dashboard...");
+    navigate("/dashboard"); // Navigate to the dashboard route
   };
 
   return (
@@ -18,45 +21,48 @@ const Login: React.FC = () => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        bgcolor: "#EAEDED", // Background color added
+        bgcolor: "#EAEDED",
       }}
     >
       <Paper
         elevation={8}
         sx={{
-          width: "90vw",
-          height: "90vh",
+          width: { xs: '95vw', sm: '80vw', md: '70vw', lg: '60vw' }, // Responsive width
+          maxWidth: '900px', // Max width
+          height: "auto",    // Auto height
+          maxHeight: '90vh', // Max height
           borderRadius: "12px",
           overflow: "hidden",
+          display: 'flex', // Use flex for centering content in case image column is hidden
         }}
       >
         <Grid container sx={{ height: "100%" }}>
-          {/* Left Side - Background Image */}
+          {/* Left Side - Background Image (Hidden on smaller screens if needed) */}
           <Grid
             item
-            xs={12}
-            md={6}
+            xs={0} // Hidden on xs screens
+            md={6} // Takes half width on md and up
             sx={{
-              backgroundImage: `url('https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=400,h=384,fit=crop/YNqJ7wao53Ca1DjX/compliance-A1aKpXL4okfevwWw.png')`,
+              backgroundImage: `url('https://www.eleapsoftware.com/wp-content/uploads/2021/10/the-evolution-of-the-modern-day-lms-2000x1358.jpg.webp')`, // Slightly larger image
               backgroundSize: "cover",
               backgroundPosition: "center",
-              minHeight: "100%",
+              minHeight: { xs: '200px', md: '100%'}, // Minimum height especially for smaller views if shown
+              display: { xs: 'none', md: 'block' } // Control visibility
             }}
           />
 
           {/* Right Side - Login Form */}
           <Grid
             item
-            xs={12}
-            md={6}
+            xs={12} // Takes full width on xs
+            md={6} // Takes half width on md and up
             sx={{
-              p: 6,
+              p: { xs: 3, sm: 4, md: 6 }, // Responsive padding
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
               textAlign: "center",
-              bgcolor: "white", // Background color for the form
-              boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)", // Subtle shadow for depth
+              bgcolor: "white",
             }}
           >
             <Typography variant="h4" sx={{ mb: 2, fontWeight: "bold", color: "#007bff" }}>
@@ -83,6 +89,7 @@ const Login: React.FC = () => {
               onChange={(e) => setPassword(e.target.value)}
             />
 
+            {/* Login Button now triggers navigation */}
             <Button
               variant="contained"
               fullWidth
@@ -94,14 +101,14 @@ const Login: React.FC = () => {
                 bgcolor: "#007bff",
                 "&:hover": { bgcolor: "#0056b3" },
               }}
-              onClick={handleLogin}
+              onClick={handleLogin} // Use the updated handler
             >
               Login
             </Button>
 
-            <Typography variant="body2" sx={{ mt: 2, color: "#555" }}>
+            <Typography variant="body2" sx={{ mt: 3, color: "#555" }}> {/* Increased margin top */}
               Don't have an account?{" "}
-              <Link to="/signup" style={{ color: "#007bff", textDecoration: "none" }}>
+              <Link to="/signup" style={{ color: "#007bff", textDecoration: "none", fontWeight: 'bold' }}>
                 Sign up
               </Link>
             </Typography>

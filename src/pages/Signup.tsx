@@ -1,14 +1,17 @@
 import React, { useState } from "react";
 import { TextField, Button, Typography, Box, Paper, Grid } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
 
 const Signup: React.FC = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate(); // Initialize the navigate function
 
   const handleSignup = () => {
-    console.log("Signing up with:", { name, email, password });
+    // No actual signup logic needed for this request
+    // console.log("Attempting to navigate to dashboard...");
+    navigate("/dashboard"); // Navigate to the dashboard route
   };
 
   return (
@@ -25,38 +28,42 @@ const Signup: React.FC = () => {
       <Paper
         elevation={8}
         sx={{
-          width: "90vw",
-          height: "90vh",
+          width: { xs: '95vw', sm: '85vw', md: '75vw', lg: '65vw' }, // Responsive width
+          maxWidth: '1000px', // Max width
+          height: "auto",     // Auto height
+          maxHeight: '90vh',  // Max height
           display: "flex",
           overflow: "hidden",
           borderRadius: 4,
         }}
       >
         <Grid container sx={{ height: "100%" }}>
-          {/* Left Side - Image */}
+          {/* Left Side - Image (Hidden on smaller screens) */}
           <Grid
             item
-            xs={12}
-            md={7}
+            xs={0} // Hidden on xs
+            md={7} // Takes more space on md and up
             sx={{
-              backgroundImage: `url('https://www.agilitysystem.net/wp-content/uploads/2023/06/management-system-featured-image-scaled.webp')`,
+              backgroundImage: `url('https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=600,h=600,fit=crop/YNqJ7wao53Ca1DjX/compliance-A1aKpXL4okfevwWw.png')`, // Slightly larger image
               backgroundSize: "cover",
               backgroundPosition: "center",
-              height: "100%",
+              minHeight: { xs: '200px', md: '100%'}, // Minimum height especially for smaller views if shown
+              display: { xs: 'none', md: 'block' } // Control visibility
             }}
           />
 
           {/* Right Side - Signup Form */}
           <Grid
             item
-            xs={12}
-            md={5}
+            xs={12} // Takes full width on xs
+            md={5} // Takes less space on md and up
             sx={{
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
               alignItems: "center",
-              px: 5,
+              px: { xs: 3, sm: 4, md: 5 }, // Responsive padding
+              py: 4, // Add vertical padding
               bgcolor: "#fff",
             }}
           >
@@ -93,6 +100,7 @@ const Signup: React.FC = () => {
               onChange={(e) => setPassword(e.target.value)}
             />
 
+            {/* Signup Button now triggers navigation */}
             <Button
               variant="contained"
               fullWidth
@@ -104,14 +112,14 @@ const Signup: React.FC = () => {
                 bgcolor: "#007bff",
                 "&:hover": { bgcolor: "#0056b3" },
               }}
-              onClick={handleSignup}
+              onClick={handleSignup} // Use the updated handler
             >
               Sign Up
             </Button>
 
-            <Typography variant="body2" sx={{ mt: 2, color: "#555" }}>
+            <Typography variant="body2" sx={{ mt: 3, color: "#555" }}> {/* Increased margin top */}
               Already have an account?{" "}
-              <Link to="/login" style={{ color: "#007bff", textDecoration: "none" }}>
+              <Link to="/login" style={{ color: "#007bff", textDecoration: "none", fontWeight: 'bold' }}>
                 Login
               </Link>
             </Typography>
