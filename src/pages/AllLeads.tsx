@@ -13,6 +13,7 @@ import {
   TableRow,
   InputAdornment,
   Typography,
+  Modal // Import Modal if AddLeadModal uses it directly
 } from "@mui/material";
 import { Search as SearchIcon } from "@mui/icons-material";
 import Sidebar from "../components/Sidebar";
@@ -52,7 +53,7 @@ const AllLeads = () => {
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
 
-  // Function to handle adding a new lead
+  // Function to handle adding a new lead - This signature is correct based on NewLeadData
   const handleAddLead = (newLeadData: NewLeadData) => {
     setLeads((prevLeads) => [
       ...prevLeads,
@@ -219,10 +220,11 @@ const AllLeads = () => {
         </Paper>
 
         {/* Modal Component - Pass the handleAddLead function */}
+        {/* This line is correct, assuming AddLeadModal now expects the right type */}
         <AddLeadModal
           open={openModal}
           handleClose={handleCloseModal}
-          handleAddLead={handleAddLead} // Pass the function here
+          handleAddLead={handleAddLead}
         />
       </Box>
     </Box>

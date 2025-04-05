@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -10,97 +10,143 @@ import {
   FormControlLabel,
   Checkbox,
   MenuItem,
+  Typography, // Added for section titles
+  Box, // Added for structure
 } from "@mui/material";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { Dayjs } from "dayjs";
+import dayjs, { Dayjs } from "dayjs"; // Import dayjs itself
 
-interface LeadData {
-  city: string;
-  companyName: string;
-  address: string;
-  contactNo: string;
-  designation: string;
+// --- Ideally, import these from a central types file ---
+interface Lead {
+  id: number;
+  company: string;
   email: string;
-  leadSource: string;
-  addedBy: string;
-  addedOn: string;
-  leadDate: Dayjs | null;
+  phone: string;
+  source: string;
+  address: string;
+  designation: string;
+  serviceType: string; // Expects a string
+  meetDate: string; // Expects a string
   leadType: string;
-  comment: string;
-  meetingRemark: string;
-  meetingDate: Dayjs | null;
-  serviceTypes: {
-    turnKey: boolean;
-    consultancy: boolean;
-    dcs: boolean;
-    amc: boolean;
-    kayeValidator: boolean;
-  };
+  addedBy: string;
+  remark: string;
 }
+type NewLeadData = Omit<Lead, 'id'>;
+// --- End of types to centralize ---
+
 
 interface AddLeadModalProps {
   open: boolean;
   handleClose: () => void;
-  handleAddLead: (leadData: LeadData) => void;
+  // Expect the type defined in AllLeads (or the central types file)
+  handleAddLead: (leadData: NewLeadData) => void;
 }
+
+// Define the structure for service type checkboxes locally if needed
+const serviceOptions = [
+    { label: "Turn Key", key: "turnKey" },
+    { label: "Consultancy", key: "consultancy" },
+    { label: "DCS", key: "dcs" },
+    { label: "AMC", key: "amc" },
+    { label: "Kaye Validator", key: "kayeValidator" },
+];
 
 const AddLeadModal: React.FC<AddLeadModalProps> = ({
   open,
   handleClose,
   handleAddLead,
 }) => {
-  const [leadData, setLeadData] = useState<LeadData>({
-    city: "",
-    companyName: "",
-    address: "",
-    contactNo: "",
-    designation: "",
+  // State now uses NewLeadData structure
+  const [formData, setFormData] = useState<NewLeadData>({
+    company: "", // Changed from companyName
     email: "",
-    leadSource: "",
-    addedBy: "",
-    addedOn: "",
-    leadDate: null,
+    phone: "",   // Changed from contactNo
+    source: "",  // Changed from leadSource
+    address: "",
+    designation: "",
+    serviceType: "", // Will be derived from checkboxes
+    meetDate: "",    // Will be derived from DatePicker, formatted as string
     leadType: "",
-    comment: "",
-    meetingRemark: "",
-    meetingDate: null,
-    serviceTypes: {
-      turnKey: false,
-      consultancy: false,
-      dcs: false,
-      amc: false,
-      kayeValidator: false,
-    },
+    addedBy: "", // Assuming this maps directly
+    remark: "",    // Changed from comment/meetingRemark
   });
+
+  // State to manage the checkboxes separately before converting to string
+  const [selectedServices, setSelectedServices] = useState<Record<string, boolean>>({
+    turnKey: false,
+    consultancy: false,
+    dcs: false,
+    amc: false,
+    kayeValidator: false,
+  });
+
+  // State for the date picker value
+  const [selectedMeetDate, setSelectedMeetDate] = useState<Dayjs | null>(null);
+
+  // Effect to update the single serviceType string when checkboxes change
+  useEffect(() => {
+      const activeServices = serviceOptions
+          .filter(option => selectedServices[option.key])
+          .map(option => option.label);
+      setFormData(prev => ({ ...prev, serviceType: activeServices.join(', ') }));
+  }, [selectedServices]);
+
+  // Effect to update the meetDate string when the date picker changes
+   useEffect(() => {
+        setFormData(prev => ({
+            ...prev,
+            meetDate: selectedMeetDate ? selectedMeetDate.format('YYYY-MM-DD') : ''
+        }));
+    }, [selectedMeetDate]);
+
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setLeadData((prev) => ({ ...prev, [name]: value }));
+    // Ensure the name matches keys in NewLeadData
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
-    setLeadData((prev) => ({
+    setSelectedServices(prev => ({
       ...prev,
-      serviceTypes: {
-        ...prev.serviceTypes,
-        [name]: checked,
-      },
+      [name]: checked,
     }));
   };
+
+  const handleSubmit = () => {
+      // formData is already in the NewLeadData format due to state structure and effects
+      handleAddLead(formData);
+      // Reset form after submission (optional)
+      setFormData({ company: "", email: "", phone: "", source: "", address: "", designation: "", serviceType: "", meetDate: "", leadType: "", addedBy: "", remark: "" });
+      setSelectedServices({ turnKey: false, consultancy: false, dcs: false, amc: false, kayeValidator: false });
+      setSelectedMeetDate(null);
+      // handleClose(); // handleClose is already called inside handleAddLead in AllLeads
+  }
+
+  // Reset form state when modal is closed externally
+  useEffect(() => {
+    if (!open) {
+       setFormData({ company: "", email: "", phone: "", source: "", address: "", designation: "", serviceType: "", meetDate: "", leadType: "", addedBy: "", remark: "" });
+       setSelectedServices({ turnKey: false, consultancy: false, dcs: false, amc: false, kayeValidator: false });
+       setSelectedMeetDate(null);
+    }
+  }, [open]);
+
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <DialogTitle
         sx={{
-          bgcolor: "#1565C0",
+          bgcolor: "#1565C0", // MUI Blue 700
           color: "#fff",
           textAlign: "center",
-          fontSize: "1.2rem",
+          fontSize: "1.3rem",
           fontWeight: "bold",
+          borderBottom: '1px solid #ccc'
         }}
       >
         Add New Lead
@@ -108,248 +154,98 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({
 
       <DialogContent
         sx={{
-          bgcolor: "#E3F2FD",
+          bgcolor: "#F4F6F8", // Lighter background
           p: 3,
-          maxHeight: "80vh",
-          overflowY: "auto",
-          scrollbarWidth: "none",
-          "&::-webkit-scrollbar": { display: "none" },
+          maxHeight: "80vh", // Limit height
+          overflowY: "auto", // Allow scrolling
+          scrollbarWidth: "thin", // For Firefox
+          '&::-webkit-scrollbar': { width: '8px' },
+          '&::-webkit-scrollbar-thumb': { backgroundColor: '#bdbdbd', borderRadius: '4px' },
         }}
       >
-        <Grid
-          container
-          spacing={2}
-          sx={{
-            bgcolor: "#FFFFFF",
-            p: 3,
-            borderRadius: 2,
-            boxShadow: 2,
-          }}
-        >
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="City"
-              name="city"
-              value={leadData.city}
-              onChange={handleChange}
-              variant="outlined"
-              size="small"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Company Name"
-              name="companyName"
-              value={leadData.companyName}
-              onChange={handleChange}
-              variant="outlined"
-              size="small"
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Address"
-              name="address"
-              value={leadData.address}
-              onChange={handleChange}
-              variant="outlined"
-              size="small"
-              multiline
-              rows={2}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Contact No."
-              name="contactNo"
-              value={leadData.contactNo}
-              onChange={handleChange}
-              variant="outlined"
-              size="small"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Designation"
-              name="designation"
-              value={leadData.designation}
-              onChange={handleChange}
-              variant="outlined"
-              size="small"
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Email"
-              name="email"
-              value={leadData.email}
-              onChange={handleChange}
-              variant="outlined"
-              size="small"
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <label
-              style={{
-                fontWeight: "bold",
-                display: "block",
-                marginBottom: 5,
-                color: "#1565C0",
-              }}
-            >
-              Service Type:
-            </label>
-            <Grid container spacing={1}>
-              {[
-                { label: "Turn Key", name: "turnKey" },
-                { label: "Consultancy", name: "consultancy" },
-                { label: "DCS", name: "dcs" },
-                { label: "AMC", name: "amc" },
-                { label: "Kaye Validator", name: "kayeValidator" },
-              ].map((service, index) => (
-                <Grid item xs={6} sm={2.4} key={index}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        name={service.name}
-                        checked={
-                          leadData.serviceTypes[
-                            service.name as keyof typeof leadData.serviceTypes
-                          ]
-                        }
-                        onChange={handleCheckboxChange}
-                      />
-                    }
-                    label={service.label}
-                  />
+        {/* Use Box for better structure and styling control */}
+        <Box component="form" noValidate autoComplete="off">
+            <Grid container spacing={2.5}> {/* Slightly increased spacing */}
+                {/* Basic Info Section */}
+                <Grid item xs={12}> <Typography variant="subtitle1" gutterBottom sx={{fontWeight: 'bold', color: '#1565C0'}}>Basic Information</Typography> </Grid>
+                <Grid item xs={12} sm={6}>
+                    <TextField fullWidth label="Company Name" name="company" value={formData.company} onChange={handleChange} variant="outlined" size="small" required/>
                 </Grid>
-              ))}
+                 <Grid item xs={12} sm={6}>
+                    <TextField fullWidth label="Email" name="email" value={formData.email} onChange={handleChange} variant="outlined" size="small" type="email" required/>
+                 </Grid>
+                 <Grid item xs={12} sm={6}>
+                    <TextField fullWidth label="Contact No." name="phone" value={formData.phone} onChange={handleChange} variant="outlined" size="small" required/>
+                 </Grid>
+                 <Grid item xs={12} sm={6}>
+                    <TextField fullWidth label="Designation" name="designation" value={formData.designation} onChange={handleChange} variant="outlined" size="small"/>
+                 </Grid>
+                 <Grid item xs={12}>
+                    <TextField fullWidth label="Address" name="address" value={formData.address} onChange={handleChange} variant="outlined" size="small" multiline rows={2}/>
+                 </Grid>
+
+                 {/* Lead Details Section */}
+                 <Grid item xs={12} mt={2}> <Typography variant="subtitle1" gutterBottom sx={{fontWeight: 'bold', color: '#1565C0'}}>Lead Details</Typography> </Grid>
+                 <Grid item xs={12} sm={6}>
+                    <TextField select fullWidth label="Lead Source" name="source" value={formData.source} onChange={handleChange} variant="outlined" size="small">
+                        {["Website", "Referral", "Social Media", "Cold Call", "Event", "Other"].map( (source) => ( <MenuItem key={source} value={source}>{source}</MenuItem> ))}
+                    </TextField>
+                 </Grid>
+                 <Grid item xs={12} sm={6}>
+                    <TextField select fullWidth label="Lead Type" name="leadType" value={formData.leadType} onChange={handleChange} variant="outlined" size="small">
+                        {["Hot", "Warm", "Cold"].map((type) => ( <MenuItem key={type} value={type}>{type}</MenuItem> ))}
+                    </TextField>
+                 </Grid>
+
+                {/* Service Type Section */}
+                 <Grid item xs={12} mt={1}>
+                     <Typography component="label" variant="subtitle2" sx={{ fontWeight: 'bold', display: 'block', mb: 1, color: '#555' }}> Service Type: </Typography>
+                    <Grid container spacing={0}> {/* Reduced spacing for checkboxes */}
+                    {serviceOptions.map((service) => (
+                        <Grid item xs={6} sm={4} md={2.4} key={service.key}>
+                        <FormControlLabel
+                            control={
+                            <Checkbox
+                                name={service.key} // Use key for state management
+                                checked={selectedServices[service.key]}
+                                onChange={handleCheckboxChange}
+                                size="small"
+                            />
+                            }
+                            label={service.label}
+                            sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.9rem' } }} // Smaller label
+                        />
+                        </Grid>
+                    ))}
+                    </Grid>
+                 </Grid>
+
+                {/* Meeting & Follow-up Section */}
+                 <Grid item xs={12} mt={2}> <Typography variant="subtitle1" gutterBottom sx={{fontWeight: 'bold', color: '#1565C0'}}>Meeting & Follow-up</Typography> </Grid>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                     <Grid item xs={12} sm={6}>
+                        <DatePicker
+                            label="Meeting Date"
+                            value={selectedMeetDate}
+                            onChange={(date) => setSelectedMeetDate(date)}
+                            sx={{ width: '100%' }} // Make date picker full width
+                            slotProps={{ textField: { size: 'small' } }} // Make input small
+                         />
+                     </Grid>
+                 </LocalizationProvider>
+                  <Grid item xs={12} sm={6}>
+                    <TextField fullWidth label="Added By" name="addedBy" value={formData.addedBy} onChange={handleChange} variant="outlined" size="small" />
+                 </Grid>
+                 <Grid item xs={12}>
+                    <TextField fullWidth label="Remark / Comment" name="remark" value={formData.remark} onChange={handleChange} variant="outlined" size="small" multiline rows={3}/>
+                 </Grid>
             </Grid>
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <TextField
-              select
-              fullWidth
-              label="Lead Source"
-              name="leadSource"
-              value={leadData.leadSource}
-              onChange={handleChange}
-              variant="outlined"
-              size="small"
-            >
-              {["Website", "Referral", "Social Media", "Cold Call","Other"].map(
-                (source, index) => (
-                  <MenuItem key={index} value={source}>
-                    {source}
-                  </MenuItem>
-                )
-              )}
-            </TextField>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Added By"
-              name="addedBy"
-              value={leadData.addedBy}
-              onChange={handleChange}
-              variant="outlined"
-              size="small"
-            />
-          </Grid>
-
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <Grid item xs={12} sm={6}>
-              <DatePicker
-                label="Lead Date"
-                value={leadData.leadDate}
-                onChange={(date) =>
-                  setLeadData((prev) => ({ ...prev, leadDate: date }))
-                }
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <DatePicker
-                label="Meeting Date"
-                value={leadData.meetingDate}
-                onChange={(date) =>
-                  setLeadData((prev) => ({ ...prev, meetingDate: date }))
-                }
-              />
-            </Grid>
-          </LocalizationProvider>
-
-          <Grid item xs={12}>
-            <TextField
-              select
-              fullWidth
-              label="Lead Type"
-              name="leadType"
-              value={leadData.leadType}
-              onChange={handleChange}
-              variant="outlined"
-              size="small"
-            >
-              {["Hot", "Warm", "Cold"].map((type, index) => (
-                <MenuItem key={index} value={type}>
-                  {type}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Comment"
-              name="comment"
-              value={leadData.comment}
-              onChange={handleChange}
-              variant="outlined"
-              size="small"
-              multiline
-              rows={2}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Meeting Remark"
-              name="meetingRemark"
-              value={leadData.meetingRemark}
-              onChange={handleChange}
-              variant="outlined"
-              size="small"
-              multiline
-              rows={2}
-            />
-          </Grid>
-        </Grid>
+        </Box>
       </DialogContent>
 
-      <DialogActions sx={{ bgcolor: "#E3F2FD", p: 2 }}>
-        <Button
-          onClick={() => handleAddLead(leadData)}
-          variant="contained"
-          sx={{ bgcolor: "#0D47A1", color: "#fff", mx: 2 }}
-        >
-          Add
-        </Button>
-        <Button
-          onClick={handleClose}
-          variant="contained"
-          sx={{ bgcolor: "#D32F2F", color: "#fff" }}
-        >
-          Cancel
-        </Button>
+      <DialogActions sx={{ bgcolor: "#F4F6F8", p: 2, borderTop: '1px solid #eee' }}>
+        <Button onClick={handleClose} variant="outlined" color="secondary"> Cancel </Button>
+        <Button onClick={handleSubmit} variant="contained" sx={{ bgcolor: "#0D47A1" }}> Add Lead </Button>
       </DialogActions>
     </Dialog>
   );
