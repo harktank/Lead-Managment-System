@@ -68,6 +68,8 @@ const LeadReport: React.FC = () => {
       ? Array(total - rows.length).fill(emptyRow)
       : [];
   };
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const [darkMode, setDarkMode] = useState(false);
 
   // Create empty rows if less than 12
   const emptyRows = generateEmptyRows(leads, 12);

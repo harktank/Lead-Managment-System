@@ -31,6 +31,10 @@ const AllLeads = () => {
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+const [darkMode, setDarkMode] = useState(false);
+
+
   return (
     <Box
       sx={{
